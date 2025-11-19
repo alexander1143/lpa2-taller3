@@ -2,91 +2,90 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
-from app.database import create_db_and_tables
-from app.routers import usuarios, peliculas, favoritos
-
-# TODO: Importar la configuración desde app.config
+from musica_api.config import Settings
+from init_db import init_db
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Gestor de ciclo de vida de la aplicación.
-    Se ejecuta al iniciar y al cerrar la aplicación.
+    Inicio y cierre de la aplicación. Crea las tablas si es necesario.
     """
-    # Startup: Crear tablas en la base de datos
-    create_db_and_tables()
+    # Startup: inicializar la base de datos (crea tablas si faltan)
+    init_db()
     yield
-    
-    # Shutdown: Limpiar recursos si es necesario
+    # Shutdown: acciones de cierre (si aplica)
     print("cerrando aplicación...")
 
 
-# Crear la instancia de FastAPI con metadatos apropiados
-# Incluir: title, description, version, contact, license_info
-app = FastAPI(
-    title="API de Películas",
-    description="API RESTful para gestionar usuarios, películas y favoritos",
-    version="1.0.0",
-    lifespan=lifespan,
-    # TODO: Agregar información de contacto y licencia
+# Cargar settings con pydantic-settings
+settings = Settings()
 
+# Descripción de tags para que aparezcan en la documentación Swagger UI
+openapi_tags = [
+    {"name": "Root", "description": "Endpoints de información general de la API."},
+    {"name": "Health", "description": "Endpoints de verificación de estado de la API."},
+    {"name": "Usuarios", "description": "Operaciones relacionadas con usuarios (crear, listar, actualizar)."},
+    {"name": "Canciones", "description": "Operaciones relacionadas con canciones (crear, listar, actualizar)."},
+    {"name": "Favoritos", "description": "Operaciones para marcar/desmarcar canciones favoritas."},
+]
+
+
+# Crear la instancia de FastAPI con metadatos útiles para Swagger/OpenAPI
+app = FastAPI(
+    title=settings.app_name,
+    description=(
+        "API RESTful para gestionar usuarios, canciones y favoritos. "
+        "La documentación interactiva (Swagger UI) está disponible en /docs y ReDoc en /redoc."
+    ),
+    version=settings.app_version,
+    lifespan=lifespan,
+    openapi_tags=openapi_tags,
+    contact={"name": "Equipo de Desarrollo", "email": "dev@example.com"},
+    license_info={"name": "MIT"},
 )
 
 
-# Configurar CORS para permitir solicitudes desde diferentes orígenes
-# Esto es importante para desarrollo con frontend separado
+# Configurar CORS para desarrollo
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # En producción, especificar orígenes permitidos
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
+# Incluir routers
+from musica_api.routers.usuarios import router as usuarios_router
+app.include_router(usuarios_router)
 
-# TODO: Incluir los routers de usuarios, canciones y favoritos
-# Ejemplo:
-# app.include_router(usuarios.router, prefix="/api/usuarios", tags=["Usuarios"])
 
-
-# Crear un endpoint raíz que retorne información básica de la API
 @app.get("/", tags=["Root"])
 async def root():
     """
     Endpoint raíz de la API.
-    Retorna información básica y enlaces a la documentación.
+    Retorna información básica y enlaces a la documentación interactiva.
     """
     return {
-        # TODO: Agregar información 
+        "app_name": settings.app_name,
+        "version": settings.app_version,
+        "docs": "/docs",
+        "redoc": "/redoc",
+        "openapi": "/openapi.json",
     }
 
 
-# Crear un endpoint de health check para monitoreo
 @app.get("/health", tags=["Health"])
 async def health_check():
     """
-    Health check endpoint para verificar el estado de la API.
-    Útil para sistemas de monitoreo y orquestación.
+    Health check básico. No realiza chequeos profundos aún.
     """
-    return {
-        "status": "healthy",
-        # TODO: Agregar verificación de conexión a base de datos
-        # TODO: Agregar información sobre el sistema (uptime, memoria, etc.)
-    }
-
-
-# TODO: Opcional - Agregar middleware para logging de requests
-
-
-# TODO: Opcional - Agregar manejadores de errores personalizados
+    return {"status": "healthy"}
 
 
 if __name__ == "__main__":
     import uvicorn
-    
-    uvicorn.run(
-        # TODO: Configurar el servidor uvicorn con los parámetros apropiados
-    )
+
+    uvicorn.run("main:app", host=settings.host, port=8000, reload=True)
 
 
