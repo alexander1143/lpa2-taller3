@@ -23,6 +23,24 @@ def crear_cancion(cancion: Cancion, session: Session = Depends(get_session)):
     return cancion
 
 
+@router.get("/buscar", response_model=List[Cancion], summary="Buscar canciones")
+def buscar_canciones(
+    titulo: Optional[str] = Query(None),
+    artista: Optional[str] = Query(None),
+    genero: Optional[str] = Query(None),
+    session: Session = Depends(get_session),
+):
+    query = select(Cancion)
+    if titulo:
+        query = query.where(Cancion.titulo.ilike(f"%{titulo}%"))
+    if artista:
+        query = query.where(Cancion.artista.ilike(f"%{artista}%"))
+    if genero:
+        query = query.where(Cancion.genero.ilike(f"%{genero}%"))
+    results = session.exec(query).all()
+    return results
+
+
 @router.get("/{cancion_id}", response_model=Cancion, summary="Obtener canción por ID")
 def obtener_cancion(cancion_id: int, session: Session = Depends(get_session)):
     cancion = session.get(Cancion, cancion_id)
@@ -60,9 +78,9 @@ def eliminar_cancion(cancion_id: int, session: Session = Depends(get_session)):
 
 @router.get("/buscar", response_model=List[Cancion], summary="Buscar canciones")
 def buscar_canciones(
-    titulo: Optional[str] = None,
-    artista: Optional[str] = None,
-    genero: Optional[str] = None,
+    titulo: Optional[str] = Query(None),
+    artista: Optional[str] = Query(None),
+    genero: Optional[str] = Query(None),
     session: Session = Depends(get_session),
 ):
     query = select(Cancion)
