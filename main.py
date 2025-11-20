@@ -58,6 +58,11 @@ app.add_middleware(
 # Incluir routers
 from musica_api.routers.usuarios import router as usuarios_router
 app.include_router(usuarios_router)
+from musica_api.routers.canciones import router as canciones_router
+from musica_api.routers.favoritos import router as favoritos_router
+
+app.include_router(canciones_router)
+app.include_router(favoritos_router)
 
 
 @app.get("/", tags=["Root"])

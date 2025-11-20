@@ -1,8 +1,7 @@
 from __future__ import annotations
 from typing import Optional, List
 from datetime import datetime
-from sqlmodel import SQLModel, Field
-from sqlalchemy.orm import Mapped, relationship
+from sqlmodel import SQLModel, Field, Relationship
 
 
 class Usuario(SQLModel, table=True):
@@ -13,9 +12,8 @@ class Usuario(SQLModel, table=True):
     correo: str = Field(index=True, unique=True)
     fecha_registro: datetime = Field(default_factory=datetime.utcnow)
 
-    favoritos: Mapped[List["Favorito"]] = relationship(
-        "Favorito", back_populates="usuario", cascade="all, delete-orphan"
-    )
+    # Relaciones comentadas temporalmente para evitar problemas de mapeo
+    # favoritos: list["Favorito"] = Relationship(back_populates="usuario")
 
 
 class Cancion(SQLModel, table=True):
@@ -30,9 +28,8 @@ class Cancion(SQLModel, table=True):
     genero: Optional[str] = None
     fecha_creacion: datetime = Field(default_factory=datetime.utcnow)
 
-    favoritos: Mapped[List["Favorito"]] = relationship(
-        "Favorito", back_populates="cancion", cascade="all, delete-orphan"
-    )
+    # Relaciones comentadas temporalmente para evitar problemas de mapeo
+    # favoritos: list["Favorito"] = Relationship(back_populates="cancion")
 
 
 class Favorito(SQLModel, table=True):
@@ -43,5 +40,6 @@ class Favorito(SQLModel, table=True):
     cancion_id: Optional[int] = Field(default=None, foreign_key="cancion.id")
     fecha_marcado: datetime = Field(default_factory=datetime.utcnow)
 
-    usuario: Mapped[Optional["Usuario"]] = relationship("Usuario", back_populates="favoritos")
-    cancion: Mapped[Optional["Cancion"]] = relationship("Cancion", back_populates="favoritos")
+    # Relaciones comentadas temporalmente para evitar problemas de mapeo
+    # usuario: Optional["Usuario"] = Relationship(back_populates="favoritos")
+    # cancion: Optional["Cancion"] = Relationship(back_populates="favoritos")
