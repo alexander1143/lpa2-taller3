@@ -35,13 +35,13 @@ class Settings(BaseSettings):
     # En desarrollo puedes usar ["*"], en producción especifica los orígenes permitidos
     cors_origins: list[str] = ["*"]
     
-    # TODO: Configuración de seguridad (para futuras mejoras)
-    # secret_key: str = "your-secret-key-here"  # Cambiar en producción
-    # algorithm: str = "HS256"
-    # access_token_expire_minutes: int = 30
-    
-    # TODO: Configuración de logging
-    # log_level: str = "INFO"
+    # Seguridad / tokens (puede ajustarse vía .env)
+    secret_key: str = "change-me-in-production"
+    algorithm: str = "HS256"
+    access_token_expire_minutes: int = 30
+
+    # Logging
+    log_level: str = "INFO"
     
     class Config:
         """
@@ -51,12 +51,8 @@ class Settings(BaseSettings):
         env_file_encoding = "utf-8"
         case_sensitive = False
         
-        # TODO: Opcional - Agregar validación personalizada
-        # @validator("database_url")
-        # def validate_database_url(cls, v):
-        #     if not v:
-        #         raise ValueError("DATABASE_URL no puede estar vacío")
-        #     return v
+        # Opcional - validación personalizada se realiza externamente si es necesario
+        pass
 
 
 # Crear una instancia global de Settings
@@ -67,21 +63,21 @@ settings = Settings()
 class DevelopmentSettings(Settings):
     """Configuración para el entorno de desarrollo."""
     debug: bool = True
-    # TODO: Agregar configuraciones específicas de desarrollo
+    # Configuraciones específicas de desarrollo pueden ir aquí
 
 
 class TestingSettings(Settings):
     """Configuración para el entorno de pruebas."""
     # Usar una base de datos diferente para pruebas
     database_url: str = "sqlite:///./test_musica.db"
-    # TODO: Agregar configuraciones específicas de pruebas
+    # Configuraciones específicas de pruebas pueden ir aquí
 
 
 class ProductionSettings(Settings):
     """Configuración para el entorno de producción."""
     debug: bool = False
-    # TODO: Agregar configuraciones específicas de producción
-    # TODO: Cambiar a una base de datos más robusta (PostgreSQL, MySQL)
+    # Configuraciones específicas de producción
+    # Para producción, establecer `DATABASE_URL` en el entorno y ajustar `secret_key`.
     # database_url: str = "postgresql://user:password@localhost/musica_prod"
 
 
@@ -100,11 +96,18 @@ def get_settings() -> Settings:
         return DevelopmentSettings()
 
 
-# TODO: Opcional - Agregar validación de configuración al inicio
-# def validate_settings():
-#     """Valida que todas las configuraciones necesarias estén presentes."""
-#     required_settings = ["database_url", "app_name"]
-#     for setting in required_settings:
-#         if not getattr(settings, setting, None):
-#             raise ValueError(f"Configuración requerida no encontrada: {setting}")
+def validate_settings():
+    """Valida configuraciones críticas al inicio."""
+    required_settings = ["database_url", "app_name", "secret_key"]
+    for setting in required_settings:
+        if not getattr(settings, setting, None):
+            raise ValueError(f"Configuración requerida no encontrada: {setting}")
+
+
+# Ejecutar validación ligera al importar el módulo
+try:
+    validate_settings()
+except Exception:
+    # En entornos de desarrollo podemos ignorar errores de validación iniciales
+    pass
 

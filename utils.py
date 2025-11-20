@@ -15,9 +15,9 @@ def validar_correo(correo):
     Returns:
         bool: True si el correo es válido, False en caso contrario
     """
-    # TODO: crear la expresión regular para validar el correo
-    patron = ""
-    return bool(re.match(patron, correo))
+    # expresión regular sencilla pero práctica para validar correos comunes
+    patron = r"^[\w\.-]+@[\w\.-]+\.[a-zA-Z]{2,}$"
+    return bool(re.fullmatch(patron, correo))
 
 def formatear_duracion(segundos):
     """
@@ -29,8 +29,15 @@ def formatear_duracion(segundos):
     Returns:
         str: Duración formateada como mm:ss
     """
-    # TODO: pendiente de implementar
-    pass 
+    if segundos is None:
+        return "00:00"
+    try:
+        segundos = int(segundos)
+    except (TypeError, ValueError):
+        return "00:00"
+    minutos = segundos // 60
+    resto = segundos % 60
+    return f"{minutos:02d}:{resto:02d}"
 
 def generar_slug(texto):
     """
@@ -43,17 +50,18 @@ def generar_slug(texto):
     Returns:
         str: Slug generado
     """
-    # TODO: Convertir a minúsculas
-    slug = texto
-    
-    # TODO: Reemplazar espacios con guiones
-    
-    # TODO: Eliminar caracteres no alfanuméricos (excepto guiones)
-    
-    # TODO: Reemplazar múltiples guiones con uno solo
-    
-    # TODO: Eliminar guiones al inicio y final
-    
+    if not isinstance(texto, str):
+        texto = str(texto)
+    # Convertir a minúsculas
+    slug = texto.lower()
+    # Reemplazar espacios y separadores por guiones
+    slug = re.sub(r"\s+", "-", slug)
+    # Eliminar caracteres no alfanuméricos (permitir guiones)
+    slug = re.sub(r"[^a-z0-9\-]", "", slug)
+    # Reemplazar múltiples guiones por uno solo
+    slug = re.sub(r"-+", "-", slug)
+    # Eliminar guiones al inicio y final
+    slug = slug.strip("-")
     return slug
 
 def obtener_año_actual():
@@ -63,8 +71,7 @@ def obtener_año_actual():
     Returns:
         int: Año actual
     """
-    # TODO: pendiente por implementar
-    return ""
+    return datetime.utcnow().year
 
 def validar_año(año):
     """
